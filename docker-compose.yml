@@ -1,0 +1,33 @@
+services:
+  postgres:
+    build: ./docker/postgres
+    image: machtrip-postgres:local
+    container_name: machtrip-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-machtrip}
+      POSTGRES_USER: ${DB_USER:?set DB_USER in .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - machtrip-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: machtrip-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  machtrip-pgdata:
+    name: machtrip-pgdata
